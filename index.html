@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>PaxSky Realtime Dashboard</title>
+<title>PaxSky Realtime PRO</title>
 
 <style>
 body{font-family:Arial;background:#f5f7fb;margin:20px}
@@ -30,18 +30,8 @@ th,td{
 th{background:#e5e7eb}
 
 .building{
-  background:#f1f5f9;
+  background:#e0f2fe;
   font-weight:bold;
-}
-
-.info{
-  text-align:left;
-  font-size:13px;
-}
-
-img{
-  width:120px;
-  border-radius:6px;
 }
 
 .red{color:red;font-weight:bold}
@@ -54,14 +44,12 @@ img{
 
 <h2>🏢 PaxSky Leasing Realtime</h2>
 
-<select id="filter">
-<option value="">Tất cả khu vực</option>
-</select>
+<select id="filter"></select>
 
-<table id="table">
+<table>
 <thead>
 <tr>
-<th>Tòa</th>
+<th>Tòa nhà</th>
 <th>Tầng</th>
 <th>Diện tích</th>
 <th>Giá</th>
@@ -71,13 +59,13 @@ img{
 <th>Trạng thái</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
 <script>
 
-// 🔥 LINK SHEET
-const url="https://opensheet.elk.sh/1IfJYtpt-C55rAqNV-QntBCFWyc6qG4nXCpBCSO1aJRU/PAX SKY SG";
+// ✅ FIX ENCODE SHEET NAME
+const url="https://opensheet.elk.sh/1IfJYtpt-C55rAqNV-QntBCFWyc6qG4nXCpBCSO1aJRU/PAX%20SKY%20SG";
 
 let raw=[];
 
@@ -90,70 +78,60 @@ fetch(url)
   render(data);
 });
 
-// FILTER
+// FILTER (nếu có cột khu vực thì dùng, không thì bỏ)
 function initFilter(){
-  let list=[...new Set(raw.map(x=>x["Khu Vực"]))];
-
   let f=document.getElementById("filter");
-
-  f.innerHTML='<option value="">Tất cả khu vực</option>'+
-    list.map(x=>`<option>${x}</option>`).join("");
-
-  f.onchange=()=>{
-    let val=f.value;
-    render(val?raw.filter(x=>x["Khu Vực"]===val):raw);
-  }
+  f.innerHTML='<option value="">Tất cả</option>';
 }
 
-// RENDER TABLE
+// RENDER
 function render(data){
 
-  let tbody=document.querySelector("#table tbody");
+  let tbody=document.getElementById("tbody");
   tbody.innerHTML="";
 
   let group={};
 
-  // GROUP BY TÒA
+  // 🔥 GROUP THEO TÒA (ĐÚNG CỘT)
   data.forEach(r=>{
-    let ten=r["Tên Tòa Nhà"];
+    let ten=r["THÔNG TIN TÒA NHÀ"] || "N/A";
 
     if(!group[ten]) group[ten]=[];
     group[ten].push(r);
   });
 
-  // RENDER
   for(let building in group){
 
-    let rows=group[building];
-
-    // HEADER BUILDING
     tbody.innerHTML+=`
     <tr class="building">
       <td colspan="8">${building}</td>
     </tr>`;
 
-    rows.forEach(r=>{
+    group[building].forEach(r=>{
 
-      let gia=+r["Giá thuê (USD/m2)"]||0;
-      let dienTich=+r["Diện tích trống (m2)"]||0;
+      let tang=r["TẦNG"]||"-";
+      let dienTich=+r["DIỆN TÍCH TRỐNG (m2)"]||0;
+      let gia=+r["GIÁ THUÊ ($ /m2)"]||0;
+      let giaUuDai=+r["GIÁ THUÊ ƯU ĐÃI ($/m2)"]||0;
+      let phi=+r["PHÍ QUẢN LÝ"]||0;
 
       let giaThue=(gia*dienTich*24000).toLocaleString();
+
+      let status=r["TÌNH TRẠNG"]||"TRỐNG";
 
       tbody.innerHTML+=`
       <tr>
         <td>${building}</td>
-        <td>${r["Tầng"]||"-"}</td>
+        <td>${tang}</td>
         <td>${dienTich}</td>
         <td>${gia}</td>
-        <td class="red">${gia-3 || ""}</td>
-        <td>4</td>
+        <td class="red">${giaUuDai||""}</td>
+        <td>${phi}</td>
         <td>${giaThue}</td>
-        <td class="green">TRỐNG</td>
+        <td class="green">${status}</td>
       </tr>`;
     });
-
   }
-
 }
 
 </script>
