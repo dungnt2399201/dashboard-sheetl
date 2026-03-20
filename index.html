@@ -2,100 +2,109 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PaxSky Dashboard PRO</title>
+<title>PaxSky SaaS</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{
-  font-family:Segoe UI;
-  background:#f1f5f9;
-  margin:0;
-}
+body{margin:0;font-family:Segoe UI;background:#f1f5f9}
 
-.container{
-  max-width:1400px;
-  margin:auto;
+.layout{display:flex}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;
+  background:#0f172a;
+  color:#fff;
+  height:100vh;
   padding:20px;
 }
 
-h2{margin-bottom:15px}
+.sidebar h3{margin-bottom:20px}
+
+.menu div{
+  padding:10px;
+  cursor:pointer;
+}
+
+.menu div:hover{
+  background:#1e293b;
+}
+
+/* MAIN */
+.main{
+  flex:1;
+  padding:20px;
+}
 
 /* KPI */
 .kpi{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:15px;
-  margin-bottom:20px;
+  gap:10px;
 }
 
 .card{
   background:#fff;
-  padding:15px;
-  border-radius:10px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  padding:12px;
+  border-radius:8px;
 }
 
-.value{
-  font-size:22px;
-  font-weight:bold;
-  margin-top:5px;
-}
-
-/* CHART */
-.chart-box{
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-}
+.value{font-size:20px;font-weight:bold}
 
 /* TABLE */
 table{
   width:100%;
-  border-collapse:collapse;
   background:#fff;
+  border-collapse:collapse;
+  margin-top:20px;
 }
 
 th,td{
-  padding:10px;
-  border:1px solid #eee;
+  border:1px solid #ddd;
+  padding:8px;
   text-align:center;
 }
 
-th{background:#e2e8f0}
+th{background:#e5e7eb}
 
-.building{
-  background:#dbeafe;
-  font-weight:bold;
-}
-
-.green{color:#16a34a;font-weight:bold}
-.red{color:#dc2626;font-weight:bold}
+.green{color:green;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="layout">
 
-<h2>🏢 PaxSky Leasing Dashboard</h2>
+<div class="sidebar">
+  <h3>PaxSky</h3>
+  <div class="menu">
+    <div onclick="showPage('dashboard')">📊 Dashboard</div>
+    <div onclick="showPage('leasing')">🏢 Leasing</div>
+    <div onclick="showPage('crm')">👥 CRM</div>
+  </div>
+</div>
+
+<div class="main">
+
+<div id="dashboard">
+
+<h2>Dashboard</h2>
 
 <div class="kpi">
-  <div class="card">Tổng diện tích<div id="tong" class="value">0</div></div>
-  <div class="card">Tổng trống<div id="trong" class="value">0</div></div>
-  <div class="card">Giá TB<div id="gia" class="value">0</div></div>
-  <div class="card">Doanh thu<div id="doanhthu" class="value">0</div></div>
+  <div class="card">Tổng DT<div id="tong" class="value"></div></div>
+  <div class="card">Trống<div id="trong" class="value"></div></div>
+  <div class="card">Giá TB<div id="gia" class="value"></div></div>
+  <div class="card">Doanh thu<div id="doanh" class="value"></div></div>
 </div>
 
-<div class="chart-box">
-  <canvas id="chartBar"></canvas>
+<canvas id="chart"></canvas>
+
 </div>
 
-<div class="chart-box">
-  <canvas id="chartPie"></canvas>
-</div>
+<div id="leasing" style="display:none">
+
+<h2>Quản lý mặt bằng</h2>
 
 <table>
 <thead>
@@ -104,119 +113,79 @@ th{background:#e2e8f0}
 <th>Tầng</th>
 <th>Diện tích</th>
 <th>Giá</th>
-<th>Ưu đãi</th>
-<th>Phí</th>
-<th>Giá thuê</th>
 <th>Trạng thái</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="table"></tbody>
 </table>
+
+</div>
+
+<div id="crm" style="display:none">
+<h2>CRM (đang phát triển)</h2>
+</div>
+
+</div>
 
 </div>
 
 <script>
 
-const url="https://script.google.com/macros/s/AKfycbxqthyjErEcmmnRK6Nz_PeMnNCWmeA7DGAnbZiehbFcYDIxU1ZCb_jocvApRa-i-oy36Q/exec";
+const API="https://script.googleusercontent.com/macros/echo?user_content_key=AWDtjMWVIyjj6JIrhvKERo0400To2ln0qjU5IAuwSfk-gS0xCZZgf98lgLMtu9msLta9hTP3y3yFk_sCJQsLRy1EpFD9svZhdrDoll1Kj08Th1fPQDT7JuiYXK23ClcszwgxvLVWX60oMnHEaraiwffOHv2X8cCtyh4QyGKMv5wqMgyi5L05EBoAELinhdfIhWNSTsdEg4Jff6CIRLDKXvW7YCYVLO8cv3O51g8A7wPAkcCk9GP5_n6u0OgihwYkFuZQgZccgH4gjsGjYbclBZOJGvMSGIMhBn4aGQ0UEoRI&lib=MUmemnHsce9Oxn3TtQBef5eKFNJoC2VjJ";
 
-let chartBar=null;
-let chartPie=null;
+function showPage(id){
+  document.querySelectorAll(".main > div")
+  .forEach(d=>d.style.display="none");
+  document.getElementById(id).style.display="block";
+}
 
-fetch(url)
+fetch(API)
 .then(r=>r.json())
 .then(data=>{
 
-  if(!data || data.length===0){
-    alert("❌ Không có dữ liệu từ API");
-    return;
-  }
-
-  let tbody=document.getElementById("tbody");
-
-  let tong=0,trong=0,gia=0,doanhthu=0;
-  let buildingMap={};
+  let tong=0,trong=0,gia=0,doanh=0;
+  let map={};
 
   let html="";
-  let current="";
 
   data.forEach(r=>{
 
-    if(!r.toa) return;
-
-    if(current!==r.toa){
-      current=r.toa;
-      html+=`
-      <tr class="building">
-        <td colspan="8">${current}</td>
-      </tr>`;
-    }
-
-    let dt=Number(r.dientich)||0;
-    let g=Number(r.gia)||0;
-    let doanh=dt*g*24000;
+    let dt=r.dientich||0;
+    let g=r.gia||0;
 
     tong+=dt;
     trong+=dt;
     gia+=g;
-    doanhthu+=doanh;
+    doanh+=dt*g*24000;
 
-    if(!buildingMap[r.toa]) buildingMap[r.toa]=0;
-    buildingMap[r.toa]+=dt;
+    if(!map[r.toa]) map[r.toa]=0;
+    map[r.toa]+=dt;
 
     html+=`
     <tr>
       <td>${r.toa}</td>
-      <td>${r.tang||""}</td>
-      <td>${dt.toLocaleString()}</td>
+      <td>${r.tang}</td>
+      <td>${dt}</td>
       <td>${g}</td>
-      <td class="red">${r.uudai||""}</td>
-      <td>${r.phi||""}</td>
-      <td>${doanh.toLocaleString()}</td>
-      <td class="green">${r.trangthai||""}</td>
+      <td class="green">${r.trangthai}</td>
     </tr>`;
   });
 
-  tbody.innerHTML=html;
+  document.getElementById("table").innerHTML=html;
 
-  // KPI
-  document.getElementById("tong").innerText=tong.toLocaleString()+" m²";
-  document.getElementById("trong").innerText=trong.toLocaleString()+" m²";
-  document.getElementById("gia").innerText=(gia/data.length).toFixed(1)+" USD";
-  document.getElementById("doanhthu").innerText=doanhthu.toLocaleString()+" VND";
+  document.getElementById("tong").innerText=tong;
+  document.getElementById("trong").innerText=trong;
+  document.getElementById("gia").innerText=(gia/data.length).toFixed(1);
+  document.getElementById("doanh").innerText=doanh.toLocaleString();
 
-  // destroy chart cũ
-  if(chartBar) chartBar.destroy();
-  if(chartPie) chartPie.destroy();
-
-  let labels=Object.keys(buildingMap);
-  let values=Object.values(buildingMap);
-
-  chartBar=new Chart(document.getElementById("chartBar"),{
+  new Chart(document.getElementById("chart"),{
     type:'bar',
     data:{
-      labels:labels,
-      datasets:[{
-        label:'Diện tích trống',
-        data:values
-      }]
-    },
-    options:{responsive:true}
-  });
-
-  chartPie=new Chart(document.getElementById("chartPie"),{
-    type:'pie',
-    data:{
-      labels:['Đã thuê','Còn trống'],
-      datasets:[{
-        data:[tong-trong,trong]
-      }]
+      labels:Object.keys(map),
+      datasets:[{data:Object.values(map)}]
     }
   });
 
-})
-.catch(err=>{
-  console.error(err);
-  alert("❌ Lỗi kết nối API");
 });
 
 </script>
