@@ -2,97 +2,31 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PaxSky Leasing PRO</title>
+<title>PaxSky PRO</title>
 
 <style>
-body{
-  font-family:Arial;
-  background:#f1f5f9;
-  margin:20px;
-}
-
-h2{margin-bottom:10px}
-
-select{
-  padding:6px 10px;
-  border-radius:6px;
-  margin-bottom:15px;
-}
-
-/* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-}
-
-th,td{
-  border:1px solid #ddd;
-  padding:8px;
-  text-align:center;
-}
-
-th{
-  background:#e5e7eb;
-}
-
-.building{
-  background:#dbeafe;
-  font-weight:bold;
-}
-
-.red{color:#dc2626;font-weight:bold}
+body{font-family:Arial;background:#f1f5f9;margin:20px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
+th{background:#e5e7eb}
+.building{background:#dbeafe;font-weight:bold}
 .green{color:#16a34a;font-weight:bold}
-
-/* KPI */
-.kpi{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-bottom:15px;
-}
-
-.card{
-  background:#fff;
-  padding:12px;
-  border-radius:8px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-
-.value{
-  font-size:20px;
-  font-weight:bold;
-  margin-top:5px;
-}
 </style>
 </head>
 
 <body>
 
-<h2>🏢 PaxSky Leasing Realtime</h2>
-
-<select id="filter">
-<option value="">Tất cả</option>
-</select>
-
-<div class="kpi">
-  <div class="card">Tổng diện tích<div id="tong" class="value"></div></div>
-  <div class="card">Tổng trống<div id="trong" class="value"></div></div>
-  <div class="card">Giá TB<div id="gia" class="value"></div></div>
-  <div class="card">Doanh thu<div id="doanhthu" class="value"></div></div>
-</div>
+<h2>🏢 PaxSky Leasing PRO</h2>
 
 <table>
 <thead>
 <tr>
-<th>Tòa nhà</th>
+<th>Tòa</th>
 <th>Tầng</th>
 <th>Diện tích</th>
 <th>Giá</th>
 <th>Ưu đãi</th>
 <th>Phí</th>
-<th>Giá thuê</th>
 <th>Trạng thái</th>
 </tr>
 </thead>
@@ -101,105 +35,41 @@ th{
 
 <script>
 
-// 🔥 LINK SHEET (ĐÃ FIX ENCODE)
-const url="https://opensheet.elk.sh/1IfJYtpt-C55rAqNV-QntBCFWyc6qG4nXCpBCSO1aJRU/PAXSKYSG";
+// 🔥 DÁN LINK API CỦA BẠN
+const url="https://script.google.com/macros/s/AKfycbxqthyjErEcmmnRK6Nz_PeMnNCWmeA7DGAnbZiehbFcYDIxU1ZCb_jocvApRa-i-oy36Q/exec";
 
-let raw=[];
-
-// LOAD DATA
 fetch(url)
 .then(r=>r.json())
 .then(data=>{
-  console.log("DATA:",data); // debug
 
-  if(data.length===0){
-    alert("⚠️ Sheet chưa publish hoặc sai tên sheet");
-    return;
-  }
-
-  raw=data;
-  initFilter();
-  render(data);
-});
-
-// FILTER
-function initFilter(){
-  let list=[...new Set(raw.map(x=>x["KHU VỰC"]||""))];
-
-  let f=document.getElementById("filter");
-
-  f.innerHTML='<option value="">Tất cả</option>'+
-    list.map(x=>`<option>${x}</option>`).join("");
-
-  f.onchange=()=>{
-    let val=f.value;
-    render(val?raw.filter(x=>x["KHU VỰC"]===val):raw);
-  }
-}
-
-// RENDER
-function render(data){
-
-  let tbody=document.getElementById("tbody");
-  tbody.innerHTML="";
-
-  let tong=0,trong=0,gia=0,doanhthu=0;
-
-  let group={};
+  let html="";
+  let current="";
 
   data.forEach(r=>{
-    let ten=r["THÔNG TIN TÒA NHÀ"] || "N/A";
 
-    if(!group[ten]) group[ten]=[];
-    group[ten].push(r);
+    if(current!==r.toa){
+      current=r.toa;
+      html+=`
+      <tr class="building">
+        <td colspan="7">${current}</td>
+      </tr>`;
+    }
+
+    html+=`
+    <tr>
+      <td>${r.toa}</td>
+      <td>${r.tang}</td>
+      <td>${r.dientich}</td>
+      <td>${r.gia}</td>
+      <td>${r.uudai}</td>
+      <td>${r.phi}</td>
+      <td class="green">${r.trangthai}</td>
+    </tr>`;
   });
 
-  for(let building in group){
+  document.getElementById("tbody").innerHTML=html;
 
-    tbody.innerHTML+=`
-    <tr class="building">
-      <td colspan="8">${building}</td>
-    </tr>`;
-
-    group[building].forEach(r=>{
-
-      let tang=r["TẦNG"]||"-";
-
-      let dienTich=parseFloat((r["DIỆN TÍCH TRỐNG (m2)"]||"0").replace(/,/g,""))||0;
-      let giaThue=parseFloat((r["GIÁ THUÊ ($ /m2)"]||"0").replace("$",""))||0;
-      let giaUuDai=parseFloat((r["GIÁ THUÊ ƯU ĐÃI ($/m2)"]||"0").replace("$",""))||"";
-      let phi=parseFloat((r["PHÍ QUẢN LÝ"]||"0").replace("$",""))||0;
-
-      let status=r["TÌNH TRẠNG"]||"TRỐNG";
-
-      let doanh=(giaThue*dienTich*24000);
-
-      // KPI
-      tong+=dienTich;
-      trong+=dienTich;
-      gia+=giaThue;
-      doanhthu+=doanh;
-
-      tbody.innerHTML+=`
-      <tr>
-        <td>${building}</td>
-        <td>${tang}</td>
-        <td>${dienTich.toLocaleString()}</td>
-        <td>${giaThue}</td>
-        <td class="red">${giaUuDai}</td>
-        <td>${phi}</td>
-        <td>${doanh.toLocaleString()}</td>
-        <td class="green">${status}</td>
-      </tr>`;
-    });
-  }
-
-  // KPI render
-  document.getElementById("tong").innerText=tong.toLocaleString()+" m²";
-  document.getElementById("trong").innerText=trong.toLocaleString()+" m²";
-  document.getElementById("gia").innerText=(gia/data.length).toFixed(1)+" USD";
-  document.getElementById("doanhthu").innerText=doanhthu.toLocaleString()+" VND";
-}
+});
 
 </script>
 
