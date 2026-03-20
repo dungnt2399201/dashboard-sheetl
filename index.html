@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tổng quan cho thuê văn phòng</title>
+  <style>
+    :root{
+      --bg:#eef2f8;
+      --panel:#f7f9fd;
+      --card:#ffffff;
+      --line:#d8dee9;
+      --text:#26324a;
+      --muted:#6b7a99;
+      --blue1:#4ea1ff;
+      --blue2:#0b61d6;
+      --green1:#a0d63d;
+      --green2:#5ca61a;
+      --orange1:#ffb347;
+      --orange2:#ff7b00;
+      --red1:#ff6e66;
+      --red2:#d51d1d;
+      --shadow:0 10px 22px rgba(33,56,99,.08);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#f8fbff 0%, #eef3fa 100%);
+      color:var(--text);
+    }
+
+    .dashboard{
+      width:min(1200px, calc(100vw - 32px));
+      margin:22px auto;
+      padding:18px;
+      background:rgba(255,255,255,.48);
+      border:1px solid rgba(214,222,236,.8);
+      border-radius:24px;
+      box-shadow:0 12px 30px rgba(33,56,99,.06);
+      backdrop-filter: blur(6px);
+    }
+
+    .title-wrap{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      margin-bottom:18px;
+      padding:4px 10px 10px;
+    }
+    .title-wrap .line{
+      flex:1;
+      height:2px;
+      background:linear-gradient(90deg, transparent, #b6c0d4, transparent);
+      position:relative;
+    }
+    .title-wrap .line::after{
+      content:"";
+      position:absolute;
+      right:8px;
+      top:50%;
+      width:6px;height:6px;
+      border-radius:50%;
+      background:#b6c0d4;
+      transform:translateY(-50%);
+    }
+    .title-wrap .line.left::after{right:8px}
+    .title-wrap .line.right::after{left:8px}
+    h1{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:.2px;
+      color:#22345b;
+      text-align:center;
+      white-space:nowrap;
+    }
+
+    .top-grid{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:14px;
+      margin-bottom:16px;
+    }
+
+    .metric{
+      border-radius:16px;
+      color:#fff;
+      padding:14px 18px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+      min-height:92px;
+    }
+    .metric::before{
+      content:"";
+      position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
+      pointer-events:none;
+    }
+    .metric .label{
+      font-size:15px;
+      font-weight:700;
+      opacity:.96;
+      margin-bottom:10px;
+      position:relative;
+      z-index:1;
+    }
+    .metric .value{
+      font-size:30px;
+      font-weight:900;
+      line-height:1.05;
+      letter-spacing:.3px;
+      position:relative;
+      z-index:1;
+    }
+    .metric .sub{
+      font-size:14px;
+      margin-top:8px;
+      font-weight:700;
+      opacity:.98;
+      position:relative;
+      z-index:1;
+    }
+
+    .blue{background:linear-gradient(180deg,var(--blue1),var(--blue2))}
+    .green{background:linear-gradient(180deg,var(--green1),var(--green2))}
+    .orange{background:linear-gradient(180deg,var(--orange1),var(--orange2))}
+    .red{background:linear-gradient(180deg,var(--red1),var(--red2))}
+
+    .main-grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:14px;
+      margin-bottom:14px;
+    }
+
+    .panel{
+      background:linear-gradient(180deg,#fdfefe 0%, #f5f8fc 100%);
+      border:1px solid #dfe6f1;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px 16px 16px;
+    }
+
+    .panel h2{
+      margin:0 0 14px;
+      font-size:18px;
+      font-weight:800;
+      color:#33466f;
+      padding-bottom:10px;
+      border-bottom:1px solid #e5ebf5;
+    }
+
+    /* Bar chart */
+    .bar-chart-wrap{
+      padding:6px 8px 0;
+    }
+    .chart-area{
+      position:relative;
+      height:260px;
+      border-left:2px solid #b6c0d4;
+      border-bottom:2px solid #b6c0d4;
+      margin:14px 16px 16px 28px;
+      background:
+        repeating-linear-gradient(
+          to top,
+          rgba(161,176,203,.20) 0px,
+          rgba(161,176,203,.20) 1px,
+          transparent 1px,
+          transparent 43px
+        );
+    }
+    .bars{
+      position:absolute;
+      inset:12px 18px 0 18px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .bar{
+      width:34px;
+      border-radius:6px 6px 0 0;
+      position:relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    }
+    .bar.bluebar{background:linear-gradient(180deg,#57a8ff,#0b62d9)}
+    .bar.orangebar{background:linear-gradient(180deg,#ffbd63,#ff7b00)}
+
+    .line-points{
+      position:absolute;
+      inset:0 18px 0 18px;
+      pointer-events:none;
+    }
+    .line-points svg{
+      width:100%;
+      height:100%;
+      overflow:visible;
+    }
+    .money{
+      font-size:18px;
+      font-weight:900;
+      fill:#2f4e8c;
+    }
+    .xlabels{
+      display:flex;
+      justify-content:space-around;
+      color:#4c5f84;
+      font-weight:700;
+      margin:0 18px;
+    }
+    .legend-row{
+      display:flex;
+      gap:14px;
+      margin-top:14px;
+      padding:0 8px;
+    }
+    .legend-pill{
+      flex:1;
+      border-radius:10px;
+      color:#fff;
+      padding:10px 14px;
+      font-size:16px;
+      font-weight:800;
+      text-align:center;
+      box-shadow:var(--shadow);
+    }
+    .legend-pill span{
+      font-size:13px;
+      font-weight:600;
+      opacity:.95;
+      margin-left:4px;
+    }
+
+    /* Pie section */
+    .summary-flex{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      align-items:center;
+      gap:8px;
+      min-height:255px;
+      padding:4px 8px 0;
+    }
+    .pie-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      position:relative;
+    }
+    .pie{
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      background:
+        conic-gradient(#1d74e8 0 63%, #ff9818 63% 100%);
+      box-shadow: inset 0 0 18px rgba(0,0,0,.08), 0 10px 18px rgba(38,50,74,.08);
+      position:relative;
+    }
+    .pie::after{
+      content:"";
+      position:absolute;
+      inset:36px;
+      border-radius:50%;
+      background:radial-gradient(circle at 35% 30%, #ffffff, #eaf1fb);
+      box-shadow: inset 0 1px 6px rgba(0,0,0,.08);
+    }
+    .pie-center{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      z-index:2;
+      text-align:center;
+      font-weight:900;
+      color:#2f4e8c;
+    }
+    .pie-center .big{font-size:28px; line-height:1}
+    .pie-center .small{font-size:12px; margin-top:6px; color:#516688}
+
+    .summary-info{
+      padding:4px 8px;
+    }
+    .summary-item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin:12px 0;
+      font-size:18px;
+      font-weight:800;
+      color:#40557a;
+    }
+    .swatch{
+      width:54px;
+      height:20px;
+      border-radius:4px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
+    }
+    .total-potential{
+      margin-top:24px;
+      font-size:18px;
+      color:#7a5d2f;
+      font-weight:700;
+    }
+    .total-potential strong{
+      display:block;
+      font-size:26px;
+      color:#cc7a00;
+      margin-top:6px;
+      letter-spacing:.5px;
+    }
+    .progress{
+      height:10px;
+      background:#e7edf7;
+      border-radius:999px;
+      overflow:hidden;
+      display:flex;
+      margin-top:12px;
+    }
+    .progress .filled{
+      width:63%;
+      background:linear-gradient(90deg,#2575f0,#3ec4cc);
+    }
+    .progress .vacant{
+      width:37%;
+      background:linear-gradient(90deg,#ffb544,#ff8c00);
+    }
+
+    /* Table */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:14px;
+      font-size:15px;
+      background:#fff;
+    }
+    thead th{
+      background:linear-gradient(180deg,#f8fbff,#eef3fa);
+      color:#3d4e72;
+      font-weight:800;
+      padding:12px 10px;
+      border:1px solid #dfe6f1;
+      text-align:center;
+    }
+    tbody td{
+      padding:11px 10px;
+      border:1px solid #dfe6f1;
+      text-align:center;
+      font-weight:700;
+      color:#31415f;
+      background:#fff;
+    }
+    tbody tr:nth-child(even) td{
+      background:#f6f9fd;
+    }
+    tbody tr.total td{
+      background:#f1f6ff;
+      font-weight:900;
+    }
+    tbody td:first-child, thead th:first-child{
+      text-align:left;
+      padding-left:16px;
+    }
+    .usd, .highlight{
+      color:#b36b00;
+    }
+
+    @media (max-width: 1024px){
+      .top-grid{grid-template-columns:repeat(2,1fr)}
+      .main-grid{grid-template-columns:1fr}
+    }
+    @media (max-width: 680px){
+      .dashboard{width:calc(100vw - 12px); padding:10px}
+      .top-grid{grid-template-columns:1fr}
+      .summary-flex{grid-template-columns:1fr}
+      .title-wrap{gap:10px}
+      h1{font-size:20px; white-space:normal}
+      .metric .value{font-size:26px}
+      table{font-size:13px}
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="title-wrap">
+      <div class="line left"></div>
+      <h1>Tổng quan cho thuê văn phòng</h1>
+      <div class="line right"></div>
+    </div>
+
+    <section class="top-grid">
+      <div class="metric blue">
+        <div class="label">Tổng diện tích khai thác</div>
+        <div class="value">14,500 m²</div>
+      </div>
+      <div class="metric green">
+        <div class="label">Đơn giá thuê trung bình</div>
+        <div class="value">20 USD/m²</div>
+      </div>
+      <div class="metric orange">
+        <div class="label">Diện tích đã cho thuê</div>
+        <div class="value">9,200 m²</div>
+      </div>
+      <div class="metric red">
+        <div class="label">Diện tích còn trống</div>
+        <div class="value">5,300 m²</div>
+        <div class="sub">Doanh thu tiềm năng từ diện tích trống</div>
+        <div class="value" style="font-size:28px">106,000 USD</div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <div class="panel">
+        <h2>Tổng quan tỷ lệ lấp đầy</h2>
+        <div class="bar-chart-wrap">
+          <div class="chart-area">
+            <div class="bars">
+              <div class="bar bluebar" style="height:190px"></div>
+              <div class="bar bluebar" style="height:175px"></div>
+              <div class="bar bluebar" style="height:150px"></div>
+              <div class="bar orangebar" style="height:92px"></div>
+              <div class="bar bluebar" style="height:110px"></div>
+              <div class="bar bluebar" style="height:118px"></div>
+              <div class="bar bluebar" style="height:128px"></div>
+              <div class="bar orangebar" style="height:148px"></div>
+              <div class="bar orangebar" style="height:166px"></div>
+              <div class="bar orangebar" style="height:192px"></div>
+            </div>
+
+            <div class="line-points">
+              <svg viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
+                <polyline
+                  fill="none"
+                  stroke="#3b82d0"
+                  stroke-width="4"
+                  points="40,170 220,160 400,145 560,115 730,72 920,22"
+                />
+                <g fill="#ffffff" stroke="#3b82d0" stroke-width="4">
+                  <circle cx="40" cy="170" r="16"></circle>
+                  <circle cx="220" cy="160" r="16"></circle>
+                  <circle cx="400" cy="145" r="16"></circle>
+                  <circle cx="560" cy="115" r="16"></circle>
+                  <circle cx="730" cy="72" r="16"></circle>
+                  <circle cx="920" cy="22" r="16"></circle>
+                </g>
+                <text x="540" y="92" class="money">$</text>
+                <text x="710" y="48" class="money">$</text>
+                <text x="905" y="6" class="money">$</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="xlabels">
+            <div>Tòa A</div>
+            <div>Tòa B</div>
+            <div>Tòa C</div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-pill blue">63% <span>Đã cho thuê</span></div>
+            <div class="legend-pill orange">37% <span>Còn trống</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Bảng tổng hợp cho thuê văn phòng</h2>
+        <div class="summary-flex">
+          <div class="pie-wrap">
+            <div class="pie"></div>
+            <div class="pie-center">
+              <div class="big">63%</div>
+              <div class="small">Đã cho thuê</div>
+            </div>
+          </div>
+          <div class="summary-info">
+            <div class="summary-item">
+              <div class="swatch" style="background:linear-gradient(180deg,#4ea1ff,#0b61d6)"></div>
+              <div>Đã cho thuê</div>
+            </div>
+            <div class="summary-item">
+              <div class="swatch" style="background:linear-gradient(180deg,#ffb347,#ff7b00)"></div>
+              <div>Còn trống</div>
+            </div>
+            <div class="total-potential">
+              Doanh thu tiềm năng
+              <strong>106,000 USD</strong>
+            </div>
+          </div>
+        </div>
+        <div class="progress">
+          <div class="filled"></div>
+          <div class="vacant"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Bảng tổng hợp cho thuê văn phòng</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tòa nhà</th>
+            <th>Tổng diện tích</th>
+            <th>Diện tích đã thuê</th>
+            <th>Diện tích còn trống</th>
+            <th>Đơn giá (USD/m²)</th>
+            <th>Doanh thu tiềm năng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tòa A</td>
+            <td>3,500 m²</td>
+            <td>2,500 m²</td>
+            <td>1,000 m²</td>
+            <td>18 USD</td>
+            <td class="highlight">18,000 USD</td>
+          </tr>
+          <tr>
+            <td>Tòa B</td>
+            <td>5,000 m²</td>
+            <td>3,400 m²</td>
+            <td>1,600 m²</td>
+            <td>20 USD</td>
+            <td class="highlight">32,000 USD</td>
+          </tr>
+          <tr>
+            <td>Tòa C</td>
+            <td>6,000 m²</td>
+            <td>3,300 m²</td>
+            <td>2,700 m²</td>
+            <td>22 USD</td>
+            <td class="highlight">59,400 USD</td>
+          </tr>
+          <tr class="total">
+            <td>Tổng cộng</td>
+            <td>14,500 m²</td>
+            <td>9,200 m²</td>
+            <td>5,300 m²</td>
+            <td>20 USD</td>
+            <td class="highlight">106,000 USD</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>
