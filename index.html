@@ -84,7 +84,9 @@ fetch(url)
 
 data.forEach(row => {
 
-  let cols = Object.values(row);
+let cols = Object.values(row).map(v => 
+  typeof v === "string" ? v.replace(/,/g, "") : v
+);
 
   let ten = cols[0] || "";
   let c = parseFloat(cols[1]) || 0;
