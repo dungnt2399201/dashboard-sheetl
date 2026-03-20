@@ -217,38 +217,44 @@ function render(data){
 }
 
 // TREND CHART
-fetch(urlTrend)
-.then(res=>res.json())
-.then(data=>{
-
-  let months=[...new Set(data.map(x=>x["Tháng"]))];
-  let giaTB=[], tyLe=[];
-
-  months.forEach(m=>{
-    let rows=data.filter(x=>x["Tháng"]===m);
-
-    let avgGia=rows.reduce((a,b)=>a+(+b["Giá thuê TB (USD/m2)"]||0),0)/rows.length;
-
-    let avgTyLe=rows.reduce((a,b)=>{
-      let v=(b["Tỷ lệ lấp đầy (%)"]||"0").replace("%","");
-      return a+(+v);
-    },0)/rows.length;
-
-    giaTB.push(avgGia.toFixed(1));
-    tyLe.push(avgTyLe.toFixed(1));
-  });
-
-  trendChart=new Chart(document.getElementById("trendChart"),{
-    type:'line',
-    data:{
-      labels:months,
-      datasets:[
-        {label:"Giá thuê", data:giaTB, borderWidth:3, tension:0.3},
-        {label:"Lấp đầy (%)", data:tyLe, borderWidth:3, tension:0.3}
-      ]
+trendChart = new Chart(document.getElementById("trendChart"),{
+  data:{
+    labels:months,
+    datasets:[
+      {
+        type:'line',
+        label:'Giá thuê (USD/m2)',
+        data:giaTB,
+        borderWidth:3,
+        tension:0.3,
+        yAxisID:'y1'
+      },
+      {
+        type:'bar',
+        label:'Tỷ lệ lấp đầy (%)',
+        data:tyLe,
+        yAxisID:'y',
+      }
+    ]
+  },
+  options:{
+    responsive:true,
+    interaction:{mode:'index', intersect:false},
+    plugins:{
+      legend:{position:'bottom'}
+    },
+    scales:{
+      y:{
+        beginAtZero:true,
+        title:{display:true,text:'% lấp đầy'}
+      },
+      y1:{
+        position:'right',
+        title:{display:true,text:'Giá thuê'},
+        grid:{drawOnChartArea:false}
+      }
     }
-  });
-
+  }
 });
 </script>
 
