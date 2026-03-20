@@ -92,8 +92,9 @@ function render(data){
 
   let group={};
 
-  // 🔥 GROUP THEO TÒA (ĐÚNG CỘT)
   data.forEach(r=>{
+
+    // ✅ FIX KEY CHUẨN
     let ten=r["THÔNG TIN TÒA NHÀ"] || "N/A";
 
     if(!group[ten]) group[ten]=[];
@@ -109,23 +110,36 @@ function render(data){
 
     group[building].forEach(r=>{
 
-      let tang=r["TẦNG"]||"-";
-      let dienTich=+r["DIỆN TÍCH TRỐNG (m2)"]||0;
-      let gia=+r["GIÁ THUÊ ($ /m2)"]||0;
-      let giaUuDai=+r["GIÁ THUÊ ƯU ĐÃI ($/m2)"]||0;
-      let phi=+r["PHÍ QUẢN LÝ"]||0;
+      // ✅ FIX ĐÚNG CỘT
+      let tang = r["TẦNG"] || "-";
 
-      let giaThue=(gia*dienTich*24000).toLocaleString();
+      let dienTich = parseFloat(
+        (r["DIỆN TÍCH TRỐNG (m2)"]||"0").replace(/,/g,"")
+      ) || 0;
 
-      let status=r["TÌNH TRẠNG"]||"TRỐNG";
+      let gia = parseFloat(
+        (r["GIÁ THUÊ ($ /m2)"]||"0").replace("$","")
+      ) || 0;
+
+      let giaUuDai = parseFloat(
+        (r["GIÁ THUÊ ƯU ĐÃI ($/m2)"]||"0").replace("$","")
+      ) || "";
+
+      let phi = parseFloat(
+        (r["PHÍ QUẢN LÝ"]||"0").replace("$","")
+      ) || 0;
+
+      let status = r["TÌNH TRẠNG"] || "TRỐNG";
+
+      let giaThue = (gia * dienTich * 24000).toLocaleString();
 
       tbody.innerHTML+=`
       <tr>
         <td>${building}</td>
         <td>${tang}</td>
-        <td>${dienTich}</td>
+        <td>${dienTich.toLocaleString()}</td>
         <td>${gia}</td>
-        <td class="red">${giaUuDai||""}</td>
+        <td class="red">${giaUuDai}</td>
         <td>${phi}</td>
         <td>${giaThue}</td>
         <td class="green">${status}</td>
