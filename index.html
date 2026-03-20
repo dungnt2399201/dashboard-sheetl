@@ -82,35 +82,36 @@ fetch(url)
   let tong=0, da=0, trong=0, doanhThu=0, gia=0;
   let html = "";
 
-  data.forEach(row => {
+data.forEach(row => {
 
-    let cols = Object.values(row);
+  let cols = Object.values(row);
 
-    let ten = cols[0] || "";
-    let t = parseFloat(cols[1]) || 0;
-    let d = parseFloat(cols[2]) || 0;
-    let c = parseFloat(cols[3]) || 0;
-    let g = parseFloat(cols[4]) || 0;
+  let ten = cols[0] || "";
+  let c = parseFloat(cols[1]) || 0;
+  let g = parseFloat(cols[2]) || 0;
 
-    let dt = c * g;
+  let t = c;
+  let d = 0;
 
-    tong += t;
-    da += d;
-    trong += c;
-    doanhThu += dt;
-    gia += g;
+  let dt = c * g;
 
-    html += `
-      <tr>
-        <td>${ten}</td>
-        <td>${t.toLocaleString()}</td>
-        <td>${d.toLocaleString()}</td>
-        <td>${c.toLocaleString()}</td>
-        <td>${g}</td>
-        <td>${dt.toLocaleString()}</td>
-      </tr>
-    `;
-  });
+  tong += t;
+  da += d;
+  trong += c;
+  doanhThu += dt;
+  gia += g;
+
+  html += `
+    <tr>
+      <td>${ten}</td>
+      <td>${t.toLocaleString()}</td>
+      <td>${d}</td>
+      <td>${c.toLocaleString()}</td>
+      <td>${g}</td>
+      <td>${dt.toLocaleString()}</td>
+    </tr>
+  `;
+});
 
   gia = gia / data.length;
 
