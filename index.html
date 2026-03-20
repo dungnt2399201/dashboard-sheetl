@@ -25,12 +25,12 @@ padding:15px;
 border-radius:10px;
 box-shadow:0 3px 8px rgba(0,0,0,0.05)
 }
-.value{font-size:22px;font-weight:bold}
+.card.blue{border-left:6px solid #3b82f6}
+.card.green{border-left:6px solid #22c55e}
+.card.orange{border-left:6px solid #f59e0b}
+.card.red{border-left:6px solid #ef4444}
 
-/* FILTER */
-.filter{
-margin-bottom:15px
-}
+.value{font-size:22px;font-weight:bold}
 
 /* CHART */
 .chart{
@@ -39,6 +39,8 @@ padding:15px;
 border-radius:10px;
 margin-bottom:20px
 }
+
+#pie{max-height:250px}
 
 /* TABLE */
 table{
@@ -53,15 +55,13 @@ text-align:center
 }
 th{background:#e5e7eb}
 
-/* ALERT */
-.alert{
-background:#fee2e2;
-padding:10px;
-border-radius:8px;
-margin-bottom:10px;
-color:#b91c1c;
-font-weight:bold;
+.building{
+background:#dbeafe;
+font-weight:bold
 }
+
+.green{color:#16a34a;font-weight:bold}
+.red{color:#dc2626;font-weight:bold}
 </style>
 </head>
 
@@ -71,19 +71,11 @@ font-weight:bold;
 
 <h2>📊 PaxSky BI Dashboard</h2>
 
-<div class="filter">
-<select id="filter">
-<option value="">Tất cả tòa</option>
-</select>
-</div>
-
-<div id="alertBox"></div>
-
 <div class="kpi">
-<div class="card">Tổng DT<div id="tong" class="value"></div></div>
-<div class="card">% Lấp đầy<div id="fill" class="value"></div></div>
-<div class="card">Giá TB<div id="gia" class="value"></div></div>
-<div class="card">Doanh thu<div id="doanh" class="value"></div></div>
+<div class="card blue">Tổng DT<div id="tong" class="value"></div></div>
+<div class="card green">% Lấp đầy<div id="fill" class="value"></div></div>
+<div class="card orange">Giá TB<div id="gia" class="value"></div></div>
+<div class="card red">Doanh thu<div id="doanh" class="value"></div></div>
 </div>
 
 <div class="chart"><canvas id="bar"></canvas></div>
@@ -97,6 +89,9 @@ font-weight:bold;
 <th>Tầng</th>
 <th>Diện tích</th>
 <th>Giá</th>
+<th>Ưu đãi</th>
+<th>Phí</th>
+<th>Giá thuê</th>
 <th>Trạng thái</th>
 </tr>
 </thead>
@@ -109,32 +104,11 @@ font-weight:bold;
 
 const API="https://script.google.com/macros/s/AKfycbxqthyjErEcmmnRK6Nz_PeMnNCWmeA7DGAnbZiehbFcYDIxU1ZCb_jocvApRa-i-oy36Q/exec";
 
-let rawData=[];
 let barChart,pieChart,trendChart;
 
 fetch(API)
 .then(r=>r.json())
 .then(data=>{
-rawData=data;
-initFilter();
-render(data);
-});
-
-function initFilter(){
-let list=[...new Set(rawData.map(x=>x.toa))];
-let f=document.getElementById("filter");
-
-list.forEach(x=>{
-f.innerHTML+=`<option value="${x}">${x}</option>`;
-});
-
-f.onchange=()=>{
-let val=f.value;
-render(val?rawData.filter(x=>x.toa===val):rawData);
-}
-}
-
-function render(data){
 
 let tong=0,trong=0,da=0,gia=0,doanh=0;
 
@@ -164,77 +138,101 @@ doanh+=dt*g*24000;
 
 if(current!==r.toa){
 current=r.toa;
-html+=`<tr><td colspan="5"><b>${current}</b></td></tr>`;
+html+=`<tr class="building"><td colspan="8">${current}</td></tr>`;
 }
 
 html+=`
 <tr>
 <td>${r.toa}</td>
 <td>${r.tang}</td>
-<td>${dt}</td>
+<td>${dt.toLocaleString()}</td>
 <td>${g}</td>
-<td>${r.trangthai}</td>
+<td class="red">${r.uudai||""}</td>
+<td>${r.phi||""}</td>
+<td>${(dt*g*24000).toLocaleString()}</td>
+<td class="green">${r.trangthai}</td>
 </tr>`;
 });
 
 document.getElementById("tbody").innerHTML=html;
 
 // KPI
-let fill=((da/tong)*100)||0;
+let fill=(da/tong*100)||0;
 
-document.getElementById("tong").innerText=tong.toLocaleString();
+document.getElementById("tong").innerText=tong.toLocaleString()+" m²";
 document.getElementById("fill").innerText=fill.toFixed(1)+"%";
-document.getElementById("gia").innerText=(gia/data.length).toFixed(1);
-document.getElementById("doanh").innerText=doanh.toLocaleString();
+document.getElementById("gia").innerText=(gia/data.length).toFixed(1)+" USD";
+document.getElementById("doanh").innerText=doanh.toLocaleString()+" VND";
 
-// ALERT
-if(fill<70){
-document.getElementById("alertBox").innerHTML=
-`<div class="alert">⚠️ Tỷ lệ lấp đầy thấp (${fill.toFixed(1)}%)</div>`;
-}else{
-document.getElementById("alertBox").innerHTML="";
-}
-
-// CHART
+// DESTROY OLD
 if(barChart) barChart.destroy();
 if(pieChart) pieChart.destroy();
 if(trendChart) trendChart.destroy();
 
-let labels=[...new Set(data.map(x=>x.toa))];
+let buildings=[...new Set(data.map(x=>x.toa))];
 
+// ===== BAR STACKED =====
 barChart=new Chart(bar,{
 type:'bar',
 data:{
-labels:labels,
+labels:buildings,
 datasets:[
-{label:'Đã thuê',data:labels.map(x=>mapDa[x]||0)},
-{label:'Trống',data:labels.map(x=>mapTrong[x]||0)}
+{
+label:'Đã thuê',
+data:buildings.map(x=>mapDa[x]||0),
+backgroundColor:'#3b82f6'
+},
+{
+label:'Còn trống',
+data:buildings.map(x=>mapTrong[x]||0),
+backgroundColor:'#ef4444'
+}
 ]
 },
-options:{scales:{x:{stacked:true},y:{stacked:true}}}
+options:{
+scales:{x:{stacked:true},y:{stacked:true}}
+}
 });
 
+// ===== PIE =====
 pieChart=new Chart(pie,{
 type:'pie',
 data:{
-labels:['Đã thuê','Trống'],
-datasets:[{data:[da,trong]}]
+labels:['Đã thuê','Còn trống'],
+datasets:[{
+data:[da,trong],
+backgroundColor:['#3b82f6','#ef4444']
+}]
 }
 });
 
-// TREND GIẢ LẬP (nâng cấp sau)
+// ===== TREND BAR 3 THÁNG =====
 trendChart=new Chart(trend,{
-type:'line',
+type:'bar',
 data:{
-labels:['T1','T2','T3'],
+labels:['Tháng 1','Tháng 2','Tháng 3'],
 datasets:[
-{label:'Giá',data:[20,21,22]},
-{label:'Lấp đầy %',data:[70,75,80]}
+{
+label:'Giá thuê (USD)',
+data:[20,21,22]
+},
+{
+label:'Lấp đầy (%)',
+data:[70,75,80]
+}
 ]
+},
+options:{
+plugins:{legend:{position:'bottom'}},
+scales:{y:{beginAtZero:true}}
 }
 });
 
-}
+})
+.catch(err=>{
+console.error(err);
+alert("❌ Lỗi API");
+});
 
 </script>
 
