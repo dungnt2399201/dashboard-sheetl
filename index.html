@@ -216,32 +216,41 @@ function render(data){
   });
 }
 
-// LOAD TREND DATA
+// TREND CHART ADVANCED
 fetch(urlTrend)
 .then(res=>res.json())
 .then(data=>{
 
-  // lấy danh sách tháng
   let months=[...new Set(data.map(x=>x["Tháng"]))];
 
-  let giaTB=[];
-  let tyLe=[];
+  let giaTB=[], tyLe=[], growth=[];
 
-  months.forEach(m=>{
+  months.forEach((m,i)=>{
     let rows=data.filter(x=>x["Tháng"]===m);
 
     let avgGia = rows.reduce((a,b)=>a+(+b["Giá thuê TB (USD/m2)"]||0),0)/rows.length;
 
     let avgTyLe = rows.reduce((a,b)=>{
-      let v=(b["Tỷ lệ lấp đầy (%)"]||"0").replace("%","");
-      return a+(+v);
+      let raw = b["Tỷ lệ lấp đầy (%)"] || "0";
+      let v = raw.toString().replace(",",".").replace("%","");
+      return a + (+v);
     },0)/rows.length;
 
-    giaTB.push(avgGia.toFixed(1));
-    tyLe.push(avgTyLe.toFixed(1));
+    avgGia = Number(avgGia.toFixed(1));
+    avgTyLe = Number(avgTyLe.toFixed(1));
+
+    giaTB.push(avgGia);
+    tyLe.push(avgTyLe);
+
+    // tăng trưởng giá
+    if(i>0){
+      let g = ((avgGia - giaTB[i-1]) / giaTB[i-1] * 100);
+      growth.push(Number(g.toFixed(1)));
+    } else {
+      growth.push(0);
+    }
   });
 
-  // VẼ CHART
   if(trendChart) trendChart.destroy();
 
   trendChart = new Chart(document.getElementById("trendChart"),{
@@ -249,44 +258,69 @@ fetch(urlTrend)
       labels:months,
       datasets:[
         {
-          type:'line',
-          label:'Giá thuê (USD/m²)',
-          data:giaTB,
-          borderWidth:3,
-          tension:0.4,
-          yAxisID:'y1',
-          borderColor:'#2563eb',
-          backgroundColor:'#2563eb'
+          type:'bar',
+          label:'Lấp đầy (%)',
+          data:tyLe,
+          backgroundColor:'#22c55e',
+          yAxisID:'y',
+          borderRadius:6
         },
         {
-          type:'bar',
-          label:'Tỷ lệ lấp đầy (%)',
-          data:tyLe,
+          type:'line',
+          label:'Giá thuê',
+          data:giaTB,
+          borderColor:'#2563eb',
+          yAxisID:'y1',
+          tension:0.4,
+          borderWidth:3
+        },
+        {
+          type:'line',
+          label:'Tăng trưởng (%)',
+          data:growth,
+          borderColor:'#f59e0b',
+          borderDash:[5,5],
           yAxisID:'y',
-          backgroundColor:'#22c55e',
-          borderRadius:6
+          tension:0.4
         }
       ]
     },
     options:{
       responsive:true,
       interaction:{mode:'index', intersect:false},
+
       plugins:{
-        legend:{position:'bottom'}
+        legend:{position:'bottom'},
+        tooltip:{
+          callbacks:{
+            label:function(ctx){
+              let label=ctx.dataset.label;
+              let val=ctx.raw;
+
+              if(label.includes("Giá")) return label+": "+val+" USD";
+              return label+": "+val+"%";
+            }
+          }
+        }
       },
+
       scales:{
         y:{
           beginAtZero:true,
-          ticks:{callback:(v)=>v+'%'}
+          ticks:{callback:(v)=>v+'%'},
+          title:{display:true,text:'%'}
         },
         y1:{
           position:'right',
           grid:{drawOnChartArea:false},
-          ticks:{callback:(v)=>v+' USD'}
+          ticks:{callback:(v)=>v.toFixed(1)+' USD'},
+          title:{display:true,text:'USD'}
         }
       }
     }
   });
+
+});
 
 });
 </script>
