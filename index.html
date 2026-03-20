@@ -216,101 +216,78 @@ function render(data){
   });
 }
 
-// TREND CHART PRO
-if(trendChart) trendChart.destroy();
+// LOAD TREND DATA
+fetch(urlTrend)
+.then(res=>res.json())
+.then(data=>{
 
-trendChart = new Chart(document.getElementById("trendChart"),{
-  data:{
-    labels:months,
-    datasets:[
-      {
-        type:'line',
-        label:'Giá thuê (USD/m²)',
-        data:giaTB,
-        borderWidth:3,
-        tension:0.4,
-        yAxisID:'y1',
-        borderColor:'#2563eb',
-        backgroundColor:'#2563eb',
-        pointRadius:4,
-        pointHoverRadius:6
-      },
-      {
-        type:'bar',
-        label:'Tỷ lệ lấp đầy (%)',
-        data:tyLe,
-        yAxisID:'y',
-        backgroundColor:'#22c55e',
-        borderRadius:6,
-        barThickness:30
-      }
-    ]
-  },
-  options:{
-    responsive:true,
-    maintainAspectRatio:false,
+  // lấy danh sách tháng
+  let months=[...new Set(data.map(x=>x["Tháng"]))];
 
-    interaction:{
-      mode:'index',
-      intersect:false
+  let giaTB=[];
+  let tyLe=[];
+
+  months.forEach(m=>{
+    let rows=data.filter(x=>x["Tháng"]===m);
+
+    let avgGia = rows.reduce((a,b)=>a+(+b["Giá thuê TB (USD/m2)"]||0),0)/rows.length;
+
+    let avgTyLe = rows.reduce((a,b)=>{
+      let v=(b["Tỷ lệ lấp đầy (%)"]||"0").replace("%","");
+      return a+(+v);
+    },0)/rows.length;
+
+    giaTB.push(avgGia.toFixed(1));
+    tyLe.push(avgTyLe.toFixed(1));
+  });
+
+  // VẼ CHART
+  if(trendChart) trendChart.destroy();
+
+  trendChart = new Chart(document.getElementById("trendChart"),{
+    data:{
+      labels:months,
+      datasets:[
+        {
+          type:'line',
+          label:'Giá thuê (USD/m²)',
+          data:giaTB,
+          borderWidth:3,
+          tension:0.4,
+          yAxisID:'y1',
+          borderColor:'#2563eb',
+          backgroundColor:'#2563eb'
+        },
+        {
+          type:'bar',
+          label:'Tỷ lệ lấp đầy (%)',
+          data:tyLe,
+          yAxisID:'y',
+          backgroundColor:'#22c55e',
+          borderRadius:6
+        }
+      ]
     },
-
-    plugins:{
-      legend:{
-        position:'bottom',
-        labels:{
-          usePointStyle:true,
-          padding:15
-        }
+    options:{
+      responsive:true,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{position:'bottom'}
       },
-      tooltip:{
-        callbacks:{
-          label:function(context){
-            let label = context.dataset.label || '';
-            let value = context.raw;
-
-            if(label.includes('Giá')){
-              return label + ': ' + value + ' USD';
-            }
-            return label + ': ' + value + '%';
-          }
-        }
-      }
-    },
-
-    scales:{
-      x:{
-        grid:{display:false}
-      },
-
-      y:{
-        beginAtZero:true,
-        position:'left',
-        title:{
-          display:true,
-          text:'% Lấp đầy'
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{callback:(v)=>v+'%'}
         },
-        ticks:{
-          callback:(v)=> v + '%'
-        }
-      },
-
-      y1:{
-        beginAtZero:false,
-        position:'right',
-        title:{
-          display:true,
-          text:'USD/m²'
-        },
-        grid:{
-          drawOnChartArea:false
-        },
-        ticks:{
-          callback:(v)=> v + ' USD'
+        y1:{
+          position:'right',
+          grid:{drawOnChartArea:false},
+          ticks:{callback:(v)=>v+' USD'}
         }
       }
     }
-  }
+  });
+
 });
 </script>
 
