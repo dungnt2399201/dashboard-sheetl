@@ -83,32 +83,22 @@ fetch(url)
 
   let html = "";
 
-  data.forEach(row => {
+ data.forEach(row => {
 
-    let t = +row["Tổng diện tích"] || 0;
-    let d = +row["Diện tích đã thuê"] || 0;
-    let c = +row["Diện tích còn trống"] || 0;
-    let g = +row["Đơn giá"] || 0;
+  let t = parseFloat(Object.values(row)[1]) || 0;
+  let d = parseFloat(Object.values(row)[2]) || 0;
+  let c = parseFloat(Object.values(row)[3]) || 0;
+  let g = parseFloat(Object.values(row)[4]) || 0;
 
-    let dt = c * g;
+  let dt = c * g;
 
-    tong += t;
-    da += d;
-    trong += c;
-    doanhThu += dt;
-    gia += g;
+  tong += t;
+  da += d;
+  trong += c;
+  doanhThu += dt;
+  gia += g;
 
-    html += `
-      <tr>
-        <td>${row["Tòa nhà"] || ""}</td>
-        <td>${t.toLocaleString()}</td>
-        <td>${d.toLocaleString()}</td>
-        <td>${c.toLocaleString()}</td>
-        <td>${g}</td>
-        <td>${dt.toLocaleString()}</td>
-      </tr>
-    `;
-  });
+});
 
   gia = gia / data.length;
 
