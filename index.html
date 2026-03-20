@@ -72,52 +72,54 @@ th {background:#eee}
 </div>
 
 <script>
+<script>
 const url = "https://opensheet.elk.sh/1H-CoUspE2Zk2wNPcXyx8NpPoUUe5hLYNPiQsAmpPErg/DATA_ToaNha";
 
 fetch(url)
 .then(res => res.json())
 .then(data => {
 
-  console.log("DATA:", data);
-
   let tong=0, da=0, trong=0, doanhThu=0, gia=0;
   let html = "";
 
   data.forEach(row => {
 
-  let cols = Object.values(row).map(v =>
-    typeof v === "string" ? v.replace(/,/g, "") : v
-  );
+    // xử lý dữ liệu sạch
+    let cols = Object.values(row).map(v =>
+      typeof v === "string" ? v.replace(/,/g, "") : v
+    );
 
-  let ten = cols[0] || "";
+    let ten = cols[0] || "";
+    let tongToa = parseFloat(cols[3]) || 0;
+    let daThue = parseFloat(cols[4]) || 0;
+    let conTrong = parseFloat(cols[5]) || 0;
+    let giaThue = parseFloat(cols[7]) || 0;
 
-  let c = parseFloat(cols[3]) || 0; // Cột đúng
-  let g = parseFloat(cols[4]) || 0;
+    let dt = conTrong * giaThue;
 
-  let t = c;
-  let d = 0;
+    // cộng tổng
+    tong += tongToa;
+    da += daThue;
+    trong += conTrong;
+    doanhThu += dt;
+    gia += giaThue;
 
-  let dt = c * g;
-
-  tong += t;
-  trong += c;
-  doanhThu += dt;
-  gia += g;
-
-  html += `
-    <tr>
-      <td>${ten}</td>
-      <td>${t.toLocaleString()}</td>
-      <td>0</td>
-      <td>${c.toLocaleString()}</td>
-      <td>${g}</td>
-      <td>${dt.toLocaleString()}</td>
-    </tr>
-  `;
-});
+    // render bảng
+    html += `
+      <tr>
+        <td>${ten}</td>
+        <td>${tongToa.toLocaleString()}</td>
+        <td>${daThue.toLocaleString()}</td>
+        <td>${conTrong.toLocaleString()}</td>
+        <td>${giaThue}</td>
+        <td>${dt.toLocaleString()}</td>
+      </tr>
+    `;
+  });
 
   gia = data.length ? gia / data.length : 0;
 
+  // gán lên dashboard
   document.getElementById("tong").innerText = tong.toLocaleString() + " m²";
   document.getElementById("gia").innerText = gia.toFixed(0) + " USD";
   document.getElementById("da").innerText = da.toLocaleString() + " m²";
@@ -128,10 +130,5 @@ fetch(url)
   document.getElementById("tableData").innerHTML = html;
 
 })
-.catch(err => {
-  console.error("Lỗi:", err);
-});
+.catch(err => console.error("Lỗi:", err));
 </script>
-
-</body>
-</html>
