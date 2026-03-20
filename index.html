@@ -72,20 +72,19 @@ th {background:#eee}
 </div>
 
 <script>
-<script>
-<script>
 const url = "https://opensheet.elk.sh/1H-CoUspE2Zk2wNPcXyx8NpPoUUe5hLYNPiQsAmpPErg/DATA_ToaNha";
 
 fetch(url)
 .then(res => res.json())
 .then(data => {
 
+  console.log("DATA:", data);
+
   let tong=0, da=0, trong=0, doanhThu=0, gia=0;
   let html = "";
 
   data.forEach(row => {
 
-    // xử lý dữ liệu sạch
     let cols = Object.values(row).map(v =>
       typeof v === "string" ? v.replace(/,/g, "") : v
     );
@@ -98,14 +97,12 @@ fetch(url)
 
     let dt = conTrong * giaThue;
 
-    // cộng tổng
     tong += tongToa;
     da += daThue;
     trong += conTrong;
     doanhThu += dt;
     gia += giaThue;
 
-    // render bảng
     html += `
       <tr>
         <td>${ten}</td>
@@ -120,7 +117,6 @@ fetch(url)
 
   gia = data.length ? gia / data.length : 0;
 
-  // gán lên dashboard
   document.getElementById("tong").innerText = tong.toLocaleString() + " m²";
   document.getElementById("gia").innerText = gia.toFixed(0) + " USD";
   document.getElementById("da").innerText = da.toLocaleString() + " m²";
