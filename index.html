@@ -16,7 +16,6 @@ body {font-family:Arial; background:#f4f7fb; margin:0}
 .green{background:#43a047}
 .orange{background:#fb8c00}
 .red{background:#e53935}
-
 .value {font-size:24px; margin-top:10px}
 
 table {width:100%; border-collapse:collapse; margin-top:20px; background:#fff}
@@ -34,22 +33,22 @@ th {background:#eee}
 <div class="grid">
   <div class="card blue">
     Tổng diện tích
-    <div class="value" id="tong"></div>
+    <div class="value" id="tong">0</div>
   </div>
 
   <div class="card green">
     Giá thuê TB
-    <div class="value" id="gia"></div>
+    <div class="value" id="gia">0</div>
   </div>
 
   <div class="card orange">
     Đã thuê
-    <div class="value" id="da"></div>
+    <div class="value" id="da">0</div>
   </div>
 
   <div class="card red">
     Còn trống
-    <div class="value" id="trong"></div>
+    <div class="value" id="trong">0</div>
     <div id="doanhThu"></div>
   </div>
 </div>
@@ -79,52 +78,60 @@ fetch(url)
 .then(res => res.json())
 .then(data => {
 
+  console.log("DATA:", data);
+
   let tong=0, da=0, trong=0, doanhThu=0, gia=0;
   let html = "";
 
-data.forEach(row => {
+  data.forEach(row => {
 
-let cols = Object.values(row).map(v => 
-  typeof v === "string" ? v.replace(/,/g, "") : v
-);
+    let cols = Object.values(row).map(v =>
+      typeof v === "string" ? v.replace(/,/g, "") : v
+    );
 
-  let ten = cols[0] || "";
-  let c = parseFloat(cols[1]) || 0;
-  let g = parseFloat(cols[2]) || 0;
+    let ten = cols[0] || "";
+    let c = parseFloat(cols[1]) || 0; // Còn trống
+    let g = parseFloat(cols[2]) || 0; // Giá
 
-  let t = c;
-  let d = 0;
+    let t = c; // Tổng = tạm bằng còn trống
+    let d = 0;
 
-  let dt = c * g;
+    let dt = c * g;
 
-  tong += t;
-  da += d;
-  trong += c;
-  doanhThu += dt;
-  gia += g;
+    tong += t;
+    da += d;
+    trong += c;
+    doanhThu += dt;
+    gia += g;
 
-  html += `
-    <tr>
-      <td>${ten}</td>
-      <td>${t.toLocaleString()}</td>
-      <td>${d}</td>
-      <td>${c.toLocaleString()}</td>
-      <td>${g}</td>
-      <td>${dt.toLocaleString()}</td>
-    </tr>
-  `;
-});
+    html += `
+      <tr>
+        <td>${ten}</td>
+        <td>${t.toLocaleString()}</td>
+        <td>${d}</td>
+        <td>${c.toLocaleString()}</td>
+        <td>${g.toLocaleString()}</td>
+        <td>${dt.toLocaleString()}</td>
+      </tr>
+    `;
+  });
 
-  gia = gia / data.length;
+  gia = data.length ? gia / data.length : 0;
 
   document.getElementById("tong").innerText = tong.toLocaleString() + " m²";
   document.getElementById("gia").innerText = gia.toFixed(0) + " USD";
   document.getElementById("da").innerText = da.toLocaleString() + " m²";
   document.getElementById("trong").innerText = trong.toLocaleString() + " m²";
-  document.getElementById("doanhThu").innerText = "Doanh thu: " + doanhThu.toLocaleString() + " USD";
+  document.getElementById("doanhThu").innerText =
+    "Doanh thu: " + doanhThu.toLocaleString() + " USD";
 
   document.getElementById("tableData").innerHTML = html;
 
 })
-.catch(err => console.error(err));
+.catch(err => {
+  console.error("Lỗi:", err);
+});
 </script>
+
+</body>
+</html>
