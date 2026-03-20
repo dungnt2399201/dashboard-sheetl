@@ -127,14 +127,20 @@ fetch(url)
 .then(data=>{
 
   if(!data || data.length===0){
-    alert("❌ Không có dữ liệu từ API");
+    alert("❌ Không có dữ liệu");
     return;
   }
 
   let tbody=document.getElementById("tbody");
 
-  let tong=0,trong=0,gia=0,doanhthu=0;
-  let buildingMap={};
+  let tong=0;
+  let trong=0;
+  let daThue=0;
+
+  let gia=0, doanhthu=0;
+
+  let mapTrong={};
+  let mapDaThue={};
 
   let html="";
   let current="";
@@ -153,15 +159,21 @@ fetch(url)
 
     let dt=Number(r.dientich)||0;
     let g=Number(r.gia)||0;
-    let doanh=dt*g*24000;
 
-    tong+=dt;
-    trong+=dt;
-    gia+=g;
-    doanhthu+=doanh;
+    // 🔥 GIẢ ĐỊNH: trạng thái TRỐNG = còn trống
+    let isTrong = (r.trangthai || "").toUpperCase().includes("TRỐNG");
 
-    if(!buildingMap[r.toa]) buildingMap[r.toa]=0;
-    buildingMap[r.toa]+=dt;
+    if(isTrong){
+      trong += dt;
+      mapTrong[r.toa]=(mapTrong[r.toa]||0)+dt;
+    }else{
+      daThue += dt;
+      mapDaThue[r.toa]=(mapDaThue[r.toa]||0)+dt;
+    }
+
+    tong += dt;
+    gia += g;
+    doanhthu += dt*g*24000;
 
     html+=`
     <tr>
@@ -171,7 +183,7 @@ fetch(url)
       <td>${g}</td>
       <td class="red">${r.uudai||""}</td>
       <td>${r.phi||""}</td>
-      <td>${doanh.toLocaleString()}</td>
+      <td>${(dt*g*24000).toLocaleString()}</td>
       <td class="green">${r.trangthai||""}</td>
     </tr>`;
   });
@@ -184,31 +196,50 @@ fetch(url)
   document.getElementById("gia").innerText=(gia/data.length).toFixed(1)+" USD";
   document.getElementById("doanhthu").innerText=doanhthu.toLocaleString()+" VND";
 
-  // destroy chart cũ
+  // destroy chart
   if(chartBar) chartBar.destroy();
   if(chartPie) chartPie.destroy();
 
-  let labels=Object.keys(buildingMap);
-  let values=Object.values(buildingMap);
+  let buildings=[...new Set(data.map(x=>x.toa))];
 
+  let dataTrong=buildings.map(b=>mapTrong[b]||0);
+  let dataDaThue=buildings.map(b=>mapDaThue[b]||0);
+
+  // 🔥 BAR STACKED
   chartBar=new Chart(document.getElementById("chartBar"),{
     type:'bar',
     data:{
-      labels:labels,
-      datasets:[{
-        label:'Diện tích trống',
-        data:values
-      }]
+      labels:buildings,
+      datasets:[
+        {
+          label:'Đã thuê',
+          data:dataDaThue,
+          backgroundColor:'#3b82f6'
+        },
+        {
+          label:'Còn trống',
+          data:dataTrong,
+          backgroundColor:'#ef4444'
+        }
+      ]
     },
-    options:{responsive:true}
+    options:{
+      responsive:true,
+      scales:{
+        x:{stacked:true},
+        y:{stacked:true}
+      }
+    }
   });
 
+  // 🔥 PIE CHUẨN
   chartPie=new Chart(document.getElementById("chartPie"),{
     type:'pie',
     data:{
       labels:['Đã thuê','Còn trống'],
       datasets:[{
-        data:[tong-trong,trong]
+        data:[daThue,trong],
+        backgroundColor:['#3b82f6','#ef4444']
       }]
     }
   });
@@ -216,7 +247,7 @@ fetch(url)
 })
 .catch(err=>{
   console.error(err);
-  alert("❌ Lỗi kết nối API");
+  alert("❌ Lỗi API");
 });
 
 </script>
