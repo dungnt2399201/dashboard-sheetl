@@ -242,6 +242,32 @@ fetch(urlTrend)
     giaTB.push(avgGia);
     tyLe.push(avgTyLe);
 
+ // TREND CHART ADVANCED
+fetch(urlTrend)
+.then(res=>res.json())
+.then(data=>{
+
+  let months=[...new Set(data.map(x=>x["Tháng"]))];
+
+  let giaTB=[], tyLe=[], growth=[];
+
+  months.forEach((m,i)=>{
+    let rows=data.filter(x=>x["Tháng"]===m);
+
+    let avgGia = rows.reduce((a,b)=>a+(+b["Giá thuê TB (USD/m2)"]||0),0)/rows.length;
+
+    let avgTyLe = rows.reduce((a,b)=>{
+      let raw = b["Tỷ lệ lấp đầy (%)"] || "0";
+      let v = raw.toString().replace(",",".").replace("%","");
+      return a + (+v);
+    },0)/rows.length;
+
+    avgGia = Number(avgGia.toFixed(1));
+    avgTyLe = Number(avgTyLe.toFixed(1));
+
+    giaTB.push(avgGia);
+    tyLe.push(avgTyLe);
+
     // tăng trưởng giá
     if(i>0){
       let g = ((avgGia - giaTB[i-1]) / giaTB[i-1] * 100);
@@ -319,6 +345,8 @@ fetch(urlTrend)
       }
     }
   });
+
+});
 </script>
 
 </body>
