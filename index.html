@@ -20,9 +20,7 @@ body{
   padding:20px;
 }
 
-h2{
-  margin-bottom:15px;
-}
+h2{margin-bottom:15px}
 
 /* KPI */
 .kpi{
@@ -66,9 +64,7 @@ th,td{
   text-align:center;
 }
 
-th{
-  background:#e2e8f0;
-}
+th{background:#e2e8f0}
 
 .building{
   background:#dbeafe;
@@ -77,7 +73,6 @@ th{
 
 .green{color:#16a34a;font-weight:bold}
 .red{color:#dc2626;font-weight:bold}
-
 </style>
 </head>
 
@@ -87,15 +82,13 @@ th{
 
 <h2>🏢 PaxSky Leasing Dashboard</h2>
 
-<!-- KPI -->
 <div class="kpi">
-  <div class="card">Tổng diện tích<div id="tong" class="value"></div></div>
-  <div class="card">Tổng trống<div id="trong" class="value"></div></div>
-  <div class="card">Giá TB<div id="gia" class="value"></div></div>
-  <div class="card">Doanh thu<div id="doanhthu" class="value"></div></div>
+  <div class="card">Tổng diện tích<div id="tong" class="value">0</div></div>
+  <div class="card">Tổng trống<div id="trong" class="value">0</div></div>
+  <div class="card">Giá TB<div id="gia" class="value">0</div></div>
+  <div class="card">Doanh thu<div id="doanhthu" class="value">0</div></div>
 </div>
 
-<!-- CHART -->
 <div class="chart-box">
   <canvas id="chartBar"></canvas>
 </div>
@@ -104,7 +97,6 @@ th{
   <canvas id="chartPie"></canvas>
 </div>
 
-<!-- TABLE -->
 <table>
 <thead>
 <tr>
@@ -125,25 +117,31 @@ th{
 
 <script>
 
-// 🔥 DÁN API CỦA BẠN
 const url="https://script.google.com/macros/s/AKfycbxqthyjErEcmmnRK6Nz_PeMnNCWmeA7DGAnbZiehbFcYDIxU1ZCb_jocvApRa-i-oy36Q/exec";
 
-let chartBar, chartPie;
+let chartBar=null;
+let chartPie=null;
 
 fetch(url)
 .then(r=>r.json())
 .then(data=>{
 
+  if(!data || data.length===0){
+    alert("❌ Không có dữ liệu từ API");
+    return;
+  }
+
   let tbody=document.getElementById("tbody");
 
   let tong=0,trong=0,gia=0,doanhthu=0;
-
   let buildingMap={};
 
   let html="";
   let current="";
 
   data.forEach(r=>{
+
+    if(!r.toa) return;
 
     if(current!==r.toa){
       current=r.toa;
@@ -153,8 +151,8 @@ fetch(url)
       </tr>`;
     }
 
-    let dt=r.dientich||0;
-    let g=r.gia||0;
+    let dt=Number(r.dientich)||0;
+    let g=Number(r.gia)||0;
     let doanh=dt*g*24000;
 
     tong+=dt;
@@ -162,20 +160,19 @@ fetch(url)
     gia+=g;
     doanhthu+=doanh;
 
-    // group chart
     if(!buildingMap[r.toa]) buildingMap[r.toa]=0;
     buildingMap[r.toa]+=dt;
 
     html+=`
     <tr>
       <td>${r.toa}</td>
-      <td>${r.tang}</td>
+      <td>${r.tang||""}</td>
       <td>${dt.toLocaleString()}</td>
       <td>${g}</td>
       <td class="red">${r.uudai||""}</td>
-      <td>${r.phi}</td>
+      <td>${r.phi||""}</td>
       <td>${doanh.toLocaleString()}</td>
-      <td class="green">${r.trangthai}</td>
+      <td class="green">${r.trangthai||""}</td>
     </tr>`;
   });
 
@@ -187,7 +184,10 @@ fetch(url)
   document.getElementById("gia").innerText=(gia/data.length).toFixed(1)+" USD";
   document.getElementById("doanhthu").innerText=doanhthu.toLocaleString()+" VND";
 
-  // ===== CHART BAR =====
+  // destroy chart cũ
+  if(chartBar) chartBar.destroy();
+  if(chartPie) chartPie.destroy();
+
   let labels=Object.keys(buildingMap);
   let values=Object.values(buildingMap);
 
@@ -197,19 +197,12 @@ fetch(url)
       labels:labels,
       datasets:[{
         label:'Diện tích trống',
-        data:values,
-        borderWidth:1
+        data:values
       }]
     },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{display:false}
-      }
-    }
+    options:{responsive:true}
   });
 
-  // ===== PIE =====
   chartPie=new Chart(document.getElementById("chartPie"),{
     type:'pie',
     data:{
@@ -220,6 +213,10 @@ fetch(url)
     }
   });
 
+})
+.catch(err=>{
+  console.error(err);
+  alert("❌ Lỗi kết nối API");
 });
 
 </script>
