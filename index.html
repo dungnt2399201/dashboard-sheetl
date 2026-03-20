@@ -2,22 +2,109 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>PaxSky PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaxSky Dashboard PRO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:Arial;background:#f1f5f9;margin:20px}
-table{width:100%;border-collapse:collapse;background:#fff}
-th,td{border:1px solid #ddd;padding:8px;text-align:center}
-th{background:#e5e7eb}
-.building{background:#dbeafe;font-weight:bold}
+body{
+  font-family:Segoe UI;
+  background:#f1f5f9;
+  margin:0;
+}
+
+.container{
+  max-width:1400px;
+  margin:auto;
+  padding:20px;
+}
+
+h2{
+  margin-bottom:15px;
+}
+
+/* KPI */
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+.value{
+  font-size:22px;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+/* CHART */
+.chart-box{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+
+th,td{
+  padding:10px;
+  border:1px solid #eee;
+  text-align:center;
+}
+
+th{
+  background:#e2e8f0;
+}
+
+.building{
+  background:#dbeafe;
+  font-weight:bold;
+}
+
 .green{color:#16a34a;font-weight:bold}
+.red{color:#dc2626;font-weight:bold}
+
 </style>
 </head>
 
 <body>
 
-<h2>🏢 PaxSky Leasing PRO</h2>
+<div class="container">
 
+<h2>🏢 PaxSky Leasing Dashboard</h2>
+
+<!-- KPI -->
+<div class="kpi">
+  <div class="card">Tổng diện tích<div id="tong" class="value"></div></div>
+  <div class="card">Tổng trống<div id="trong" class="value"></div></div>
+  <div class="card">Giá TB<div id="gia" class="value"></div></div>
+  <div class="card">Doanh thu<div id="doanhthu" class="value"></div></div>
+</div>
+
+<!-- CHART -->
+<div class="chart-box">
+  <canvas id="chartBar"></canvas>
+</div>
+
+<div class="chart-box">
+  <canvas id="chartPie"></canvas>
+</div>
+
+<!-- TABLE -->
 <table>
 <thead>
 <tr>
@@ -27,20 +114,31 @@ th{background:#e5e7eb}
 <th>Giá</th>
 <th>Ưu đãi</th>
 <th>Phí</th>
+<th>Giá thuê</th>
 <th>Trạng thái</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 
+</div>
+
 <script>
 
-// 🔥 DÁN LINK API CỦA BẠN
-const url="https://script.google.com/macros/s/AKfycbxqthyjErEcmmnRK6Nz_PeMnNCWmeA7DGAnbZiehbFcYDIxU1ZCb_jocvApRa-i-oy36Q/exec";
+// 🔥 DÁN API CỦA BẠN
+const url="YOUR_API_URL";
+
+let chartBar, chartPie;
 
 fetch(url)
 .then(r=>r.json())
 .then(data=>{
+
+  let tbody=document.getElementById("tbody");
+
+  let tong=0,trong=0,gia=0,doanhthu=0;
+
+  let buildingMap={};
 
   let html="";
   let current="";
@@ -51,23 +149,76 @@ fetch(url)
       current=r.toa;
       html+=`
       <tr class="building">
-        <td colspan="7">${current}</td>
+        <td colspan="8">${current}</td>
       </tr>`;
     }
+
+    let dt=r.dientich||0;
+    let g=r.gia||0;
+    let doanh=dt*g*24000;
+
+    tong+=dt;
+    trong+=dt;
+    gia+=g;
+    doanhthu+=doanh;
+
+    // group chart
+    if(!buildingMap[r.toa]) buildingMap[r.toa]=0;
+    buildingMap[r.toa]+=dt;
 
     html+=`
     <tr>
       <td>${r.toa}</td>
       <td>${r.tang}</td>
-      <td>${r.dientich}</td>
-      <td>${r.gia}</td>
-      <td>${r.uudai}</td>
+      <td>${dt.toLocaleString()}</td>
+      <td>${g}</td>
+      <td class="red">${r.uudai||""}</td>
       <td>${r.phi}</td>
+      <td>${doanh.toLocaleString()}</td>
       <td class="green">${r.trangthai}</td>
     </tr>`;
   });
 
-  document.getElementById("tbody").innerHTML=html;
+  tbody.innerHTML=html;
+
+  // KPI
+  document.getElementById("tong").innerText=tong.toLocaleString()+" m²";
+  document.getElementById("trong").innerText=trong.toLocaleString()+" m²";
+  document.getElementById("gia").innerText=(gia/data.length).toFixed(1)+" USD";
+  document.getElementById("doanhthu").innerText=doanhthu.toLocaleString()+" VND";
+
+  // ===== CHART BAR =====
+  let labels=Object.keys(buildingMap);
+  let values=Object.values(buildingMap);
+
+  chartBar=new Chart(document.getElementById("chartBar"),{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'Diện tích trống',
+        data:values,
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false}
+      }
+    }
+  });
+
+  // ===== PIE =====
+  chartPie=new Chart(document.getElementById("chartPie"),{
+    type:'pie',
+    data:{
+      labels:['Đã thuê','Còn trống'],
+      datasets:[{
+        data:[tong-trong,trong]
+      }]
+    }
+  });
 
 });
 
