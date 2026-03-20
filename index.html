@@ -3,20 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Tòa Nhà</title>
+<title>Dashboard Tòa Nhà PRO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {font-family:Arial; background:#f4f7fb; margin:0}
 .dashboard {max-width:1200px; margin:auto; padding:20px}
+
 .grid {display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
-.card {
-  padding:15px; border-radius:10px; color:#fff; font-weight:bold
-}
+.card {padding:15px; border-radius:10px; color:#fff; font-weight:bold}
 .blue{background:#1e88e5}
 .green{background:#43a047}
 .orange{background:#fb8c00}
 .red{background:#e53935}
-.value {font-size:24px; margin-top:10px}
+.value {font-size:22px; margin-top:10px}
+
+.filter {margin:20px 0}
 
 table {width:100%; border-collapse:collapse; margin-top:20px; background:#fff}
 th, td {border:1px solid #ddd; padding:10px; text-align:center}
@@ -28,42 +31,38 @@ th {background:#eee}
 
 <div class="dashboard">
 
-<h2>📊 Dashboard Tòa Nhà (Realtime)</h2>
+<h2>📊 Dashboard Tòa Nhà PRO</h2>
 
-<div class="grid">
-  <div class="card blue">
-    Tổng diện tích
-    <div class="value" id="tong">0</div>
-  </div>
-
-  <div class="card green">
-    Giá thuê TB
-    <div class="value" id="gia">0</div>
-  </div>
-
-  <div class="card orange">
-    Đã thuê
-    <div class="value" id="da">0</div>
-  </div>
-
-  <div class="card red">
-    Còn trống
-    <div class="value" id="trong">0</div>
-    <div id="doanhThu"></div>
-  </div>
+<!-- FILTER -->
+<div class="filter">
+  Khu vực:
+  <select id="filterKhuVuc"></select>
 </div>
 
-<h3>Bảng chi tiết</h3>
+<!-- KPI -->
+<div class="grid">
+  <div class="card blue">Tổng diện tích <div class="value" id="tong"></div></div>
+  <div class="card green">Giá TB <div class="value" id="gia"></div></div>
+  <div class="card orange">Đã thuê <div class="value" id="da"></div></div>
+  <div class="card red">Còn trống <div class="value" id="trong"></div></div>
+</div>
 
+<h3>📊 Tỷ lệ lấp đầy</h3>
+<canvas id="pieChart"></canvas>
+
+<h3>📊 Diện tích theo tòa</h3>
+<canvas id="barChart"></canvas>
+
+<h3>Bảng chi tiết</h3>
 <table>
 <thead>
 <tr>
 <th>Tòa</th>
+<th>Khu vực</th>
 <th>Tổng</th>
 <th>Đã thuê</th>
 <th>Còn trống</th>
 <th>Giá</th>
-<th>Doanh thu</th>
 </tr>
 </thead>
 <tbody id="tableData"></tbody>
@@ -74,58 +73,98 @@ th {background:#eee}
 <script>
 const url = "https://opensheet.elk.sh/1H-CoUspE2Zk2wNPcXyx8NpPoUUe5hLYNPiQsAmpPErg/DATA_ToaNha";
 
+let rawData = [];
+
 fetch(url)
 .then(res => res.json())
 .then(data => {
+  rawData = data;
+  initFilter();
+  render(data);
+});
 
-  console.log("DATA:", data);
+function initFilter(){
+  let khuVucs = [...new Set(rawData.map(r => r["Khu Vực"]))];
+  let select = document.getElementById("filterKhuVuc");
 
-  let tong=0, da=0, trong=0, doanhThu=0, gia=0;
-  let html = "";
+  select.innerHTML = `<option value="">Tất cả</option>` +
+    khuVucs.map(k => `<option>${k}</option>`).join("");
+
+  select.onchange = () => {
+    let val = select.value;
+    let filtered = val ? rawData.filter(r => r["Khu Vực"] === val) : rawData;
+    render(filtered);
+  }
+}
+
+let pieChart, barChart;
+
+function render(data){
+
+  let tong=0, da=0, trong=0, gia=0;
+  let html="";
+  let labels=[], dataBar=[];
 
   data.forEach(row => {
 
-    let cols = Object.values(row).map(v =>
-      typeof v === "string" ? v.replace(/,/g, "") : v
-    );
+    let t = +row["Tổng diện tích (m2)"] || 0;
+    let d = +row["Diện tích đã cho thuê (m2)"] || 0;
+    let c = +row["Diện tích trống (m2)"] || 0;
+    let g = +row["Giá thuê (USD/m2)"] || 0;
 
-    let ten = cols[0] || "";
-    let tongToa = parseFloat(cols[3]) || 0;
-    let daThue = parseFloat(cols[4]) || 0;
-    let conTrong = parseFloat(cols[5]) || 0;
-    let giaThue = parseFloat(cols[7]) || 0;
+    tong += t;
+    da += d;
+    trong += c;
+    gia += g;
 
-    let dt = conTrong * giaThue;
-
-    tong += tongToa;
-    da += daThue;
-    trong += conTrong;
-    doanhThu += dt;
-    gia += giaThue;
+    labels.push(row["Tên Tòa Nhà"]);
+    dataBar.push(c);
 
     html += `
-      <tr>
-        <td>${ten}</td>
-        <td>${tongToa.toLocaleString()}</td>
-        <td>${daThue.toLocaleString()}</td>
-        <td>${conTrong.toLocaleString()}</td>
-        <td>${giaThue}</td>
-        <td>${dt.toLocaleString()}</td>
-      </tr>
-    `;
+    <tr>
+      <td>${row["Tên Tòa Nhà"]}</td>
+      <td>${row["Khu Vực"]}</td>
+      <td>${t}</td>
+      <td>${d}</td>
+      <td>${c}</td>
+      <td>${g}</td>
+    </tr>`;
   });
 
-  gia = data.length ? gia / data.length : 0;
+  gia = data.length ? gia/data.length : 0;
 
-  document.getElementById("tong").innerText = tong.toLocaleString() + " m²";
-  document.getElementById("gia").innerText = gia.toFixed(0) + " USD";
-  document.getElementById("da").innerText = da.toLocaleString() + " m²";
-  document.getElementById("trong").innerText = trong.toLocaleString() + " m²";
-  document.getElementById("doanhThu").innerText =
-    "Doanh thu: " + doanhThu.toLocaleString() + " USD";
-
+  document.getElementById("tong").innerText = tong.toLocaleString();
+  document.getElementById("gia").innerText = gia.toFixed(0);
+  document.getElementById("da").innerText = da.toLocaleString();
+  document.getElementById("trong").innerText = trong.toLocaleString();
   document.getElementById("tableData").innerHTML = html;
 
-})
-.catch(err => console.error("Lỗi:", err));
+  // PIE
+  let tyLe = tong ? (da/tong*100).toFixed(1) : 0;
+
+  if(pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById("pieChart"), {
+    type:"pie",
+    data:{
+      labels:["Đã thuê","Còn trống"],
+      datasets:[{data:[tyLe,100-tyLe]}]
+    }
+  });
+
+  // BAR
+  if(barChart) barChart.destroy();
+  barChart = new Chart(document.getElementById("barChart"), {
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Diện tích trống",
+        data:dataBar
+      }]
+    }
+  });
+}
 </script>
+
+</body>
+</html>
