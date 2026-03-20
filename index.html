@@ -2,36 +2,35 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>PaxSky Leasing Dashboard</title>
+<title>PaxSky Realtime Dashboard</title>
 
 <style>
-body{
-  font-family:Arial;
-  background:#f5f7fb;
-  margin:20px;
+body{font-family:Arial;background:#f5f7fb;margin:20px}
+
+h2{margin-bottom:10px}
+
+select{
+  padding:6px 10px;
+  margin-bottom:15px;
+  border-radius:6px;
 }
 
-/* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
   background:#fff;
 }
 
-th, td{
+th,td{
   border:1px solid #ccc;
   padding:8px;
   text-align:center;
 }
 
-th{
-  background:#e5e7eb;
-  font-weight:bold;
-}
+th{background:#e5e7eb}
 
-/* BUILDING BLOCK */
 .building{
-  background:#f9fafb;
+  background:#f1f5f9;
   font-weight:bold;
 }
 
@@ -45,179 +44,119 @@ img{
   border-radius:6px;
 }
 
-/* COLORS */
 .red{color:red;font-weight:bold}
 .green{color:#16a34a;font-weight:bold}
-.gray{color:#6b7280}
-
-.title{
-  font-size:20px;
-  font-weight:bold;
-  margin-bottom:15px;
-}
 </style>
 
 </head>
 
 <body>
 
-<div class="title">🏢 BÁO CÁO CHO THUÊ PAX SKY</div>
+<h2>🏢 PaxSky Leasing Realtime</h2>
 
-<table>
+<select id="filter">
+<option value="">Tất cả khu vực</option>
+</select>
 
+<table id="table">
+<thead>
 <tr>
-<th>THÔNG TIN TÒA NHÀ</th>
-<th>TẦNG</th>
-<th>DIỆN TÍCH (m²)</th>
-<th>GIÁ ($/m²)</th>
-<th>GIÁ ƯU ĐÃI</th>
-<th>PHÍ QL</th>
-<th>GIÁ THUÊ (VND)</th>
-<th>TRẠNG THÁI</th>
+<th>Tòa</th>
+<th>Tầng</th>
+<th>Diện tích</th>
+<th>Giá</th>
+<th>Ưu đãi</th>
+<th>Phí</th>
+<th>Giá thuê</th>
+<th>Trạng thái</th>
 </tr>
-
-<!-- BUILDING 1 -->
-<tr class="building">
-<td colspan="8">TÒA NHÀ PAX SKY 144 - LÊ LAI</td>
-</tr>
-
-<tr>
-<td rowspan="4">
-
-<img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab"/>
-
-<div class="info">
-- Hướng: Đông Nam<br>
-- Kết cấu: 10 tầng<br>
-- Tổng DT: 2.430m²
-</div>
-
-</td>
-
-<td>F3</td>
-<td>220</td>
-<td>22</td>
-<td class="red">17</td>
-<td>4</td>
-<td>121,455,180</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<tr>
-<td>F4</td>
-<td>220</td>
-<td>22</td>
-<td class="red">17</td>
-<td>4</td>
-<td>121,455,180</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<tr>
-<td>F7</td>
-<td>220</td>
-<td>22</td>
-<td class="red">17</td>
-<td>4</td>
-<td>121,455,180</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<tr>
-<td>F10</td>
-<td>90</td>
-<td>22</td>
-<td class="red">17</td>
-<td>4</td>
-<td>49,686,210</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<!-- BUILDING 2 -->
-<tr class="building">
-<td colspan="8">TÒA NHÀ PAX SKY 26 UNG VĂN KHIÊM</td>
-</tr>
-
-<tr>
-<td rowspan="4">
-
-<img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e"/>
-
-<div class="info">
-- Hướng: Đông Bắc<br>
-- 7 tầng<br>
-- Tổng DT: 25.500m²
-</div>
-
-</td>
-
-<td>F2</td>
-<td>2800</td>
-<td>19</td>
-<td></td>
-<td>4</td>
-<td>1,693,011,600</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<tr>
-<td>F6</td>
-<td>680</td>
-<td>18</td>
-<td></td>
-<td>4</td>
-<td>393,283,440</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<tr>
-<td>F7</td>
-<td>1060</td>
-<td>18</td>
-<td></td>
-<td>4</td>
-<td>613,059,480</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<tr>
-<td>F8</td>
-<td>1060</td>
-<td>18</td>
-<td></td>
-<td>4</td>
-<td>613,059,480</td>
-<td class="green">TRỐNG</td>
-</tr>
-
-<!-- BUILDING 3 -->
-<tr class="building">
-<td colspan="8">TÒA NHÀ PAX SKY 278</td>
-</tr>
-
-<tr>
-<td rowspan="1">
-
-<img src="https://images.unsplash.com/photo-1497366216548-37526070297c"/>
-
-<div class="info">
-- Hướng: Đông Nam<br>
-- 7 tầng<br>
-- Tổng DT: 970m²
-</div>
-
-</td>
-
-<td>F5</td>
-<td>22</td>
-<td>17</td>
-<td></td>
-<td>4</td>
-<td>12,145,518</td>
-<td class="green">TRỐNG</td>
-</tr>
-
+</thead>
+<tbody></tbody>
 </table>
+
+<script>
+
+// 🔥 LINK SHEET
+const url="https://opensheet.elk.sh/1IfJYtpt-C55rAqNV-QntBCFWyc6qG4nXCpBCSO1aJRU/DATA_ToaNha";
+
+let raw=[];
+
+// LOAD DATA
+fetch(url)
+.then(r=>r.json())
+.then(data=>{
+  raw=data;
+  initFilter();
+  render(data);
+});
+
+// FILTER
+function initFilter(){
+  let list=[...new Set(raw.map(x=>x["Khu Vực"]))];
+
+  let f=document.getElementById("filter");
+
+  f.innerHTML='<option value="">Tất cả khu vực</option>'+
+    list.map(x=>`<option>${x}</option>`).join("");
+
+  f.onchange=()=>{
+    let val=f.value;
+    render(val?raw.filter(x=>x["Khu Vực"]===val):raw);
+  }
+}
+
+// RENDER TABLE
+function render(data){
+
+  let tbody=document.querySelector("#table tbody");
+  tbody.innerHTML="";
+
+  let group={};
+
+  // GROUP BY TÒA
+  data.forEach(r=>{
+    let ten=r["Tên Tòa Nhà"];
+
+    if(!group[ten]) group[ten]=[];
+    group[ten].push(r);
+  });
+
+  // RENDER
+  for(let building in group){
+
+    let rows=group[building];
+
+    // HEADER BUILDING
+    tbody.innerHTML+=`
+    <tr class="building">
+      <td colspan="8">${building}</td>
+    </tr>`;
+
+    rows.forEach(r=>{
+
+      let gia=+r["Giá thuê (USD/m2)"]||0;
+      let dienTich=+r["Diện tích trống (m2)"]||0;
+
+      let giaThue=(gia*dienTich*24000).toLocaleString();
+
+      tbody.innerHTML+=`
+      <tr>
+        <td>${building}</td>
+        <td>${r["Tầng"]||"-"}</td>
+        <td>${dienTich}</td>
+        <td>${gia}</td>
+        <td class="red">${gia-3 || ""}</td>
+        <td>4</td>
+        <td>${giaThue}</td>
+        <td class="green">TRỐNG</td>
+      </tr>`;
+    });
+
+  }
+
+}
+
+</script>
 
 </body>
 </html>
