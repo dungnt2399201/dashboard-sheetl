@@ -385,6 +385,53 @@
     }
   </style>
 </head>
+  <script>
+const url = "https://opensheet.elk.sh/1B-BcaQSo2b6KvTLPeVUrVaxwTGKMDjME/DATA_ToaNha";
+
+fetch(url)
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+
+    let tong = 0;
+    let daThue = 0;
+    let trong = 0;
+    let doanhThu = 0;
+    let giaTB = 0;
+
+    data.forEach(row => {
+      const tongToa = parseFloat(row["Tổng diện tích"]) || 0;
+      const da = parseFloat(row["Diện tích đã thuê"]) || 0;
+      const con = parseFloat(row["Diện tích còn trống"]) || 0;
+      const gia = parseFloat(row["Đơn giá"]) || 0;
+
+      tong += tongToa;
+      daThue += da;
+      trong += con;
+      doanhThu += con * gia;
+      giaTB += gia;
+    });
+
+    giaTB = giaTB / data.length;
+
+    // Gán vào dashboard
+    document.getElementById("tongDienTich").innerText = tong.toLocaleString() + " m²";
+    document.getElementById("giaThue").innerText = giaTB.toFixed(0) + " USD/m²";
+    document.getElementById("daThue").innerText = daThue.toLocaleString() + " m²";
+    document.getElementById("conTrong").innerText = trong.toLocaleString() + " m²";
+    document.getElementById("doanhThu").innerText = doanhThu.toLocaleString() + " USD";
+
+    // Tỷ lệ %
+    const tyLe = Math.round((daThue / tong) * 100);
+
+    // update pie chart %
+    document.querySelector(".pie-center .big").innerText = tyLe + "%";
+
+  })
+  .catch(err => {
+    console.error("Lỗi load data:", err);
+  });
+</script>
 <body>
   <div class="dashboard">
     <div class="title-wrap">
@@ -396,23 +443,24 @@
     <section class="top-grid">
       <div class="metric blue">
         <div class="label">Tổng diện tích khai thác</div>
-        <div class="value">14,500 m²</div>
+        <div class="value" id="tongDienTich"></div>
       </div>
       <div class="metric green">
         <div class="label">Đơn giá thuê trung bình</div>
-        <div class="value">20 USD/m²</div>
+      <div class="value" id="giaThue"></div>
       </div>
       <div class="metric orange">
         <div class="label">Diện tích đã cho thuê</div>
-        <div class="value">9,200 m²</div>
+    <div class="value" id="daThue"></div>
       </div>
       <div class="metric red">
         <div class="label">Diện tích còn trống</div>
-        <div class="value">5,300 m²</div>
+   <div class="value" id="conTrong"></div>
         <div class="sub">Doanh thu tiềm năng từ diện tích trống</div>
-        <div class="value" style="font-size:28px">106,000 USD</div>
+       <div class="value" id="doanhThu"></div>
       </div>
     </section>
+    
 
     <section class="main-grid">
       <div class="panel">
