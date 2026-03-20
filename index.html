@@ -216,42 +216,98 @@ function render(data){
   });
 }
 
-// TREND CHART
+// TREND CHART PRO
+if(trendChart) trendChart.destroy();
+
 trendChart = new Chart(document.getElementById("trendChart"),{
   data:{
     labels:months,
     datasets:[
       {
         type:'line',
-        label:'Giá thuê (USD/m2)',
+        label:'Giá thuê (USD/m²)',
         data:giaTB,
         borderWidth:3,
-        tension:0.3,
-        yAxisID:'y1'
+        tension:0.4,
+        yAxisID:'y1',
+        borderColor:'#2563eb',
+        backgroundColor:'#2563eb',
+        pointRadius:4,
+        pointHoverRadius:6
       },
       {
         type:'bar',
         label:'Tỷ lệ lấp đầy (%)',
         data:tyLe,
         yAxisID:'y',
+        backgroundColor:'#22c55e',
+        borderRadius:6,
+        barThickness:30
       }
     ]
   },
   options:{
     responsive:true,
-    interaction:{mode:'index', intersect:false},
-    plugins:{
-      legend:{position:'bottom'}
+    maintainAspectRatio:false,
+
+    interaction:{
+      mode:'index',
+      intersect:false
     },
+
+    plugins:{
+      legend:{
+        position:'bottom',
+        labels:{
+          usePointStyle:true,
+          padding:15
+        }
+      },
+      tooltip:{
+        callbacks:{
+          label:function(context){
+            let label = context.dataset.label || '';
+            let value = context.raw;
+
+            if(label.includes('Giá')){
+              return label + ': ' + value + ' USD';
+            }
+            return label + ': ' + value + '%';
+          }
+        }
+      }
+    },
+
     scales:{
+      x:{
+        grid:{display:false}
+      },
+
       y:{
         beginAtZero:true,
-        title:{display:true,text:'% lấp đầy'}
+        position:'left',
+        title:{
+          display:true,
+          text:'% Lấp đầy'
+        },
+        ticks:{
+          callback:(v)=> v + '%'
+        }
       },
+
       y1:{
+        beginAtZero:false,
         position:'right',
-        title:{display:true,text:'Giá thuê'},
-        grid:{drawOnChartArea:false}
+        title:{
+          display:true,
+          text:'USD/m²'
+        },
+        grid:{
+          drawOnChartArea:false
+        },
+        ticks:{
+          callback:(v)=> v + ' USD'
+        }
       }
     }
   }
